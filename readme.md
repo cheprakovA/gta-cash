@@ -1,6 +1,7 @@
-### Устаовка:
+### Устанвка:
 
-    <html>
-        <head>
-        </head>
-    </html>
+    python main.py
+
+    python -m pip install aiosqlite
+
+    git pull origin remote
