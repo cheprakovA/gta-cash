@@ -1,7 +1,7 @@
 import time
 
-from aiogram import Dispatcher, F, Router
-from aiogram.types import Message, CallbackQuery
+from aiogram import Bot, Dispatcher, F, Router
+from aiogram.types import Message, CallbackQuery, PhotoSize
 from aiogram.filters import Command, Text, CommandStart
 from aiogram.enums.parse_mode import ParseMode
 from aiogram.fsm.context import FSMContext
@@ -11,7 +11,7 @@ import kb
 from states import InputOrderData
 import text
 
-from utils import dt_repr, PLATFORMS
+from utils import DATA_DIR, PLATFORMS, UserData, dt_repr
 
 
 router = Router()
@@ -117,24 +117,22 @@ async def orders_handler(callback: CallbackQuery):
 
 @router.callback_query(Text(startswith='item-id-'))
 async def item_handler(callback: CallbackQuery, state: FSMContext):
-    await db.add_order(callback.from_user.id, 
-                       int(callback.data[8:]),
-                       int(time.time()))
+    await state.update_data(item=int(callback.data[8:]))
     await callback.message.answer('Choose your platform:', reply_markup=kb.platforms_kb())
     await state.set_state(InputOrderData.enter_platform)
 
 
 
 @router.callback_query(InputOrderData.enter_platform)
-async def got_username(callback: CallbackQuery, state: FSMContext):
-    # await db.update_user_platform(callback.from_user.id, callback.)
+async def get_username(callback: CallbackQuery, state: FSMContext):
+    await state.update_data(platform=callback.data)
     await callback.message.answer('Enter your username:')
     await state.set_state(InputOrderData.enter_username)
 
 
 
 @router.message(InputOrderData.enter_username)
-async def got_username(message: Message, state: FSMContext):
+async def get_password(message: Message, state: FSMContext):
     await state.update_data(username=message.text)
     await message.answer('Enter your password:')
     await state.set_state(InputOrderData.enter_password)
@@ -142,26 +140,57 @@ async def got_username(message: Message, state: FSMContext):
 
 
 @router.message(InputOrderData.enter_password)
-async def got_password(message: Message, state: FSMContext):
+async def get_recovery_codes(message: Message, state: FSMContext):
     await state.update_data(password=message.text)
     await message.answer('Enter your recovery codes:')
     await state.set_state(InputOrderData.enter_recovery_codes)
 
 
 
-@router.message(InputOrderData.enter_recovery_codes)
-async def got_recovery_codes(message: Message, state: FSMContext):
+@router.message(InputOrderData.enter_recovery_codes, F.photo)
+async def recovery_codes_as_image(message: Message, bot: Bot, state: FSMContext):
+    largest = message.photo[-1]
+    user_id = message.from_user.id
+    order_dt = int(time.time())
+    image_nm = f'{user_id}_{order_dt}_{largest.file_unique_id}.jpg'
+    await bot.download(largest, destination=DATA_DIR / image_nm)
     data = await state.get_data()
-    data['recovery_codes'] = message.text
+    
+    await db.add_order(user_id, 
+                       data['platform'], 
+                       UserData(data['username'], 
+                                data['password'], 
+                                image_nm),
+                       data['item'],
+                       order_dt)
+
     print(data)
     await state.clear()
 
 
+@router.message(InputOrderData.enter_recovery_codes, F.text)
+async def recovery_codes_as_text(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    order_dt = int(time.time())
+    data = await state.get_data()
+    recovery_codes = '|'.join(message.text.split('\n'))
 
-@router.callback_query(Text(startswith='platform-'))
-async def platform_handler(callback: CallbackQuery):
-    await db.update_user_platform(callback.from_user.id, callback.data[9:])
-    await callback.answer()
+    await db.add_order(user_id, 
+                       data['platform'], 
+                       UserData(data['username'], 
+                                data['password'], 
+                                recovery_codes),
+                       data['item'], 
+                       order_dt)
+
+    print(data)
+    await state.clear()
+
+
+# @router.callback_query(Text(startswith='platform-'))
+# async def platform_handler(callback: CallbackQuery):
+#     await db.update_user_platform(callback.from_user.id, callback.data[9:])
+#     await callback.answer()
 
 
 

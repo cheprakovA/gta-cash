@@ -28,7 +28,7 @@ def menu_kb() -> InlineKeyboardMarkup:
 def platforms_kb() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     for alias, text in PLATFORMS.items():
-        builder.add(InlineKeyboardButton(text=text, callback_data=f'platform-{alias}'))
+        builder.add(InlineKeyboardButton(text=text, callback_data=alias))
     builder.add(InlineKeyboardButton(text='🎮 menu', callback_data='main_menu'))
     return builder.adjust(2, 2, 1).as_markup()
 
