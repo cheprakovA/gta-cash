@@ -7,7 +7,7 @@ from aiogram.types import (
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from db.utils import get_items
+from db.interaction import get_items
 from utils import PLATFORMS
 
 
@@ -22,7 +22,7 @@ def menu_kb() -> InlineKeyboardMarkup:
         InlineKeyboardButton(text='💬 Support', url='https://t.me/JorgeSupport'),
         InlineKeyboardButton(text='⭐ Reviews', url='https://t.me/+7EdFvKHQhd8xZTli')
     )
-    builder.row(InlineKeyboardButton(text=':handshake: Referral', 
+    builder.row(InlineKeyboardButton(text='🤝🏻 Referral',
                                      callback_data='get_referal_link'))
     return builder.as_markup()
 
@@ -37,7 +37,7 @@ def platforms_kb() -> InlineKeyboardMarkup:
 
 def payment_kb(link: str) -> InlineKeyboardMarkup:
     buttons = [
-        [InlineKeyboardButton(text=':purse: Pay via Wallet', url=link)],
+        [InlineKeyboardButton(text='👛 Pay via Wallet', url=link)],
         [InlineKeyboardButton(text='🎮 Menu', callback_data='main_menu')],
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)

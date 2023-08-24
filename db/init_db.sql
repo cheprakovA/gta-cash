@@ -32,6 +32,20 @@ create table orders(
 );
 
 
+drop table if exists orders_new;
+create table orders_new(
+    id                 varchar not null, 
+    status             varchar check( status in ('ACTIVE', 'EXPIRED', 'PAID', 'CANCELLED') ) not null,
+    number             varchar not null,
+    amount             varchar not null
+    createdDateTime    timestamp not null,
+    expirationDateTime timestamp not null,
+    payLink            varchar not null,
+    directPayLink      varchar not null,
+    completedDateTime  timestamp null default null
+);
+
+
 insert into items(title, price) 
 values 
     ('10 million',  17.99 ),

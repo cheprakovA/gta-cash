@@ -1,12 +1,3 @@
-__all__ = [
-    'cmd_start',
-    'main_menu_handler',
-    'catalog_handler',
-    'platforms_handler',
-    'referal_link_handler'
-]
-
-
 from aiogram import Bot, Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Text, CommandStart
@@ -14,10 +5,9 @@ from aiogram.filters.command import CommandObject
 from aiogram.enums.parse_mode import ParseMode
 from aiogram.utils.deep_linking import create_start_link, decode_payload
 
-import db
+import db.interaction
 import kb
 import text
-
 
 
 router = Router()
@@ -26,9 +16,10 @@ router = Router()
 @router.message(CommandStart())
 async def cmd_start(message: Message, command: CommandObject):
     reference = decode_payload(command.args or '') or None
-    if not await db.utils.user_exists(message.from_user.id):
-        await db.utils.add_user(message.from_user.id, message.from_user.username, 
-                          message.from_user.language_code, reference)
+    user = message.from_user
+    if not await db.interaction.user_exists(user.id):
+        await db.interaction.add_user(user.id, user.username, 
+                                      user.language_code, reference)
     answ = text.SALUTATION_MESSAGE.format(name=message.from_user.first_name) + \
         '\n' + text.HELP_MESSAGE
     await message.answer(answ, reply_markup=kb.menu_kb())

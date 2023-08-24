@@ -28,9 +28,9 @@ class MoneyAmount:
     amount: str
     
     @classmethod
-    def from_dict(cls, data: dict) -> None:
-        obj = cls(currencyCode = data['currencyCode'],
-                  amount = data['amount'])
+    def from_dict(cls, data) -> None:
+        obj = cls(currencyCode = data.currencyCode,
+                  amount = data.amount)
         return obj
     
     def __repr__(self) -> str:
@@ -41,7 +41,7 @@ class MoneyAmount:
 class TempOrder:
     id: str
     number: str
-    amount: MoneyAmount
+    # amount: MoneyAmount
     created_dt: str
     expiration_dt: str
     pay_link: str
@@ -51,7 +51,7 @@ class TempOrder:
     def from_dict(cls, data: dict) -> 'TempOrder':
         obj = cls(data['id'], 
                   data['number'], 
-                  MoneyAmount.from_dict(data['amount']),
+                #   MoneyAmount.from_dict(data['amount']),
                   data['createdDateTime'], 
                   data['expirationDateTime'], 
                   data['payLink'], 
