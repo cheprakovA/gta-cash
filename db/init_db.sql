@@ -18,23 +18,11 @@ create table items(
 
 drop table if exists orders;
 create table orders(
-    id           integer primary key, 
-    user_id      integer,
-    item_id      integer,
-    external_id  varchar not null,
-    ud           user_data,
-    tmp          temp_order,
-    payed_ts     timestamp null default null,
-    completed_ts timestamp null default null,
-    status       varchar check( status in ('u', 'p', 'c') ) not null default 'u',
-    foreign key( user_id ) references users( id ),
-    foreign key( item_id ) references items( id )
-);
-
-
-drop table if exists orders_new;
-create table orders_new(
-    id                 varchar not null, 
+    id                 varchar not null primary key,
+    userId             integer not null,
+    itemId             integer not null,
+    externalId         varchar not null,
+    logPassRc          userdata not null,
     status             varchar check( status in ('ACTIVE', 'EXPIRED', 'PAID', 'CANCELLED') ) not null,
     number             varchar not null,
     amount             varchar not null
@@ -42,7 +30,9 @@ create table orders_new(
     expirationDateTime timestamp not null,
     payLink            varchar not null,
     directPayLink      varchar not null,
-    completedDateTime  timestamp null default null
+    completedDateTime  timestamp null default null,
+    foreign key( user_id ) references users( id ),
+    foreign key( item_id ) references items( id )
 );
 
 

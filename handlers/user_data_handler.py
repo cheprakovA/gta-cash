@@ -62,10 +62,13 @@ async def get_recovery_codes(message: Message, state: FSMContext):
 async def recovery_codes_as_image(message: Message, bot: Bot, state: FSMContext):
     largest = message.photo[-1]
     user_id = message.from_user.id
-    await bot.download(largest, 
-                       destination=DATA_DIR / f'{largest.file_unique_id}.jpg')
+    file_nm = f'{largest.file_unique_id}.jpg'
+    await bot.download(largest, destination=DATA_DIR / file_nm)
+    await state.update_data(recovery_codes=file_nm)
+    
     data = await state.get_data()
-    item_id = data['item']
+    item_id = data.pop('item')
+    
     item = await db.interaction.get_item(item_id)
 
     request = PaymentRequest(amount=MoneyAmount(0.02), 
@@ -76,6 +79,21 @@ async def recovery_codes_as_image(message: Message, bot: Bot, state: FSMContext)
     response = await send_payment_request(request)
 
     print(response)
+    
+    await db.interaction.add_order(
+        id=response.data.id,
+        user_id=user_id,
+        item_id=item_id,
+        external_id=request.externalId,
+        logPassRc=UserData(**data),
+        status=response.data.status,
+        number=response.data.number,
+        amount=response.data.amount,
+        createdDateTime=response.data.createdDateTime,
+        expirationDateTime=response.data.expirationDateTime,
+        payLink=response.data.payLink,
+        directPayLink=response.data.directPayLink
+    )
     
     # api = AsyncWalletPayAPI(api_key=WALLET_KEY)
 

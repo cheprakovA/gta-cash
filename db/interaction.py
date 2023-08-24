@@ -3,6 +3,8 @@ import sqlite3
 from typing import Iterable, Optional
 import aiosqlite
 
+from wallet.entities import MoneyAmount
+
 from .entities import TempOrder, UserData
 from utils import SCRIPT_PATH, DB_PATH
 
@@ -12,21 +14,11 @@ def adapt_user_data(udata: UserData) -> str:
     
 
 def convert_user_data(s: str) -> UserData:
-    return UserData.from_dict(json.loads(s))
-
-
-def adapt_temp_order(to: TempOrder) -> str:
-    return repr(to)
-
-
-def convert_temp_order(s: str) -> TempOrder:
-    return TempOrder.from_dict(data=json.loads(s))
+    return UserData(**json.loads(s))
 
 
 sqlite3.register_adapter(UserData, adapt_user_data)
-sqlite3.register_converter('user_data', convert_user_data)
-sqlite3.register_adapter(TempOrder, adapt_temp_order)
-sqlite3.register_converter('incomplete_order', convert_temp_order)
+sqlite3.register_converter('userdata', convert_user_data)
 
 
 def create_tables():
@@ -79,14 +71,26 @@ async def add_user(user_id: int, username: str, lang_code: str, ref: Optional[st
         await conn.commit()
 
 
-
-async def add_order(user_id: int, item_id: int, external_id: str, user_data: UserData, 
-                    temp_order: TempOrder) -> None:
+async def add_order(
+    id: str,
+    user_id: int, 
+    item_id: int, 
+    external_id: str, 
+    logPassRc: UserData,
+    status: str,
+    number: str,
+    amount: MoneyAmount,
+    createdDateTime: str,
+    expirationDateTime: str,
+    payLink: str,
+    directPayLink: str,
+    completedDateTime: str | None = None
+) -> None:
     if not await user_exists(user_id):
         raise Exception('user not present in database')
     async with aiosqlite.connect(DB_PATH) as conn:
         await conn.execute(
-            'insert into orders(user_id, item_id, external_id, user_data, temp_order) \
+            'insert into orders \
              values (?, ?, ?, ?, ?)',
             (user_id, item_id, external_id, user_data, temp_order))
         await conn.commit()

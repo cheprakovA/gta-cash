@@ -6,9 +6,9 @@ from aiogram.types import (
     ReplyKeyboardRemove
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from db.enums import Platform
 
 from db.interaction import get_items
-from utils import PLATFORMS
 
 
 
@@ -29,8 +29,10 @@ def menu_kb() -> InlineKeyboardMarkup:
 
 def platforms_kb() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    for alias, text in PLATFORMS.items():
-        builder.add(InlineKeyboardButton(text=text, callback_data=alias))
+    builder.add(InlineKeyboardButton(text=Platform.PS4, callback_data='ps4'))
+    builder.add(InlineKeyboardButton(text=Platform.PS5, callback_data='ps5'))
+    builder.add(InlineKeyboardButton(text=Platform.XBOXONE, callback_data='xboxone'))
+    builder.add(InlineKeyboardButton(text=Platform.XBOXSEX, callback_data='xboxsex'))
     builder.add(InlineKeyboardButton(text='🎮 Menu', callback_data='main_menu'))
     return builder.adjust(2, 2, 1).as_markup()
 

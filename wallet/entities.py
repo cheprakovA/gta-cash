@@ -34,7 +34,8 @@ class PaymentRequest:
 
     def __post_init__(self) -> None:
         self.externalId = str(self.externalId)
-        assert len(self.description) in range(5, 101), 'DDDD'
+        self.amount = MoneyAmount(**self.amount)
+        # assert len(self.description) in range(5, 101), 'DDDD'
 
 
 @dataclass

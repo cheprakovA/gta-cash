@@ -22,13 +22,6 @@ DB_PATH = WORK_DIR  / 'db' / 'db.sqlite'
 
 DB_NAME = 'db.sqlite'
 
-PLATFORMS = {
-    'ps4':     'PS4',
-    'ps5':     'PS5',
-    'xboxsex': 'Xbox Series X|S',
-    'xboxone': 'Xbox One',
-}
-
 BOT_TOKEN = '6599454857:AAHJvVwp3pTa7Grn5rPJMYNavfN3wJbHxjs'
 WALLET_KEY = '0YzKF2xlOVXIxotj5EtF86APbFWMxhUtrbQw'
 APP_BASE_URL = ''
