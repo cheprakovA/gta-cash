@@ -15,12 +15,12 @@ router = Router()
 
 @router.message(CommandStart())
 async def cmd_start(message: Message, command: CommandObject):
-    reference = decode_payload(command.args or '') or None
+    referral = decode_payload(command.args or '') or None
     user = message.from_user
     if not await db.interaction.user_exists(user.id):
         await db.interaction.add_user(user.id, user.username, 
-                                      user.language_code, reference)
-    answ = text.SALUTATION_MESSAGE.format(name=message.from_user.first_name) + \
+                                      user.language_code, referral)
+    answ = text.SALUTATION_MESSAGE.format(name=user.first_name) + \
         '\n' + text.HELP_MESSAGE
     await message.answer(answ, reply_markup=kb.menu_kb())
 
@@ -54,12 +54,12 @@ async def platforms_handler(callback: CallbackQuery):
     await callback.message.answer('Choose your platform:', reply_markup=kb.platforms_kb())
 
 
-@router.callback_query(Text('get_referal_link'))
+@router.callback_query(Text('get_referral_link'))
 async def referal_link_handler(callback: CallbackQuery, bot: Bot):
     link = await create_start_link(bot, 
-                                   payload=str(callback.from_user.id) or '', 
+                                   payload=str(callback.from_user.id),
                                    encode=True)
-    await callback.message.answer(f'Tap to copy your referal:\n\n`{link}`', 
+    await callback.message.answer(f'Tap to copy your referral:\n\n`{link}`', 
                                   parse_mode=ParseMode.MARKDOWN_V2)
 
 

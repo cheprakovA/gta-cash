@@ -11,7 +11,6 @@ from db.enums import Platform
 from db.interaction import get_items
 
 
-
 def menu_kb() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.row(
@@ -23,13 +22,13 @@ def menu_kb() -> InlineKeyboardMarkup:
         InlineKeyboardButton(text='⭐ Reviews', url='https://t.me/+7EdFvKHQhd8xZTli')
     )
     builder.row(InlineKeyboardButton(text='🤝🏻 Referral',
-                                     callback_data='get_referal_link'))
+                                     callback_data='get_referral_link'))
     return builder.as_markup()
 
 
 def platforms_kb() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text=Platform.PS4, callback_data='ps4'))
+    builder.add(InlineKeyboardButton(text=Platform.PS4, callback_data=Platform.PS4.lower()))
     builder.add(InlineKeyboardButton(text=Platform.PS5, callback_data='ps5'))
     builder.add(InlineKeyboardButton(text=Platform.XBOXONE, callback_data='xboxone'))
     builder.add(InlineKeyboardButton(text=Platform.XBOXSEX, callback_data='xboxsex'))

@@ -6,13 +6,13 @@ from typing import Generic, TypeVar
 import uuid
 
 from utils import BOT_TG_URL, WALLET_TG_URL
-from .enums import CurrencyCode
+from .enums import CurrencyCode, OperationStatus, OrderStatus, UpdateType
 
 
 @dataclass
 class MoneyAmount:
-    amount: float
-    currencyCode: str = CurrencyCode.USD
+    amount: str | float
+    currencyCode: CurrencyCode = CurrencyCode.USD
 
     def __post_init__(self) -> None:
         self.amount = float(self.amount)
@@ -23,10 +23,10 @@ class MoneyAmount:
 
 @dataclass
 class PaymentRequest:
-    amount: MoneyAmount
+    amount: MoneyAmount | dict | float
     customerTelegramUserId: int
     description: str
-    externalId: str = field(default_factory=uuid.uuid4)
+    externalId: uuid.UUID | str
     timeoutSeconds: int = field(default=10800, repr=False)
     returnUrl: str = field(default=BOT_TG_URL, repr=False)
     failReturnUrl: str = field(default=WALLET_TG_URL, repr=False)
@@ -34,16 +34,21 @@ class PaymentRequest:
 
     def __post_init__(self) -> None:
         self.externalId = str(self.externalId)
-        self.amount = MoneyAmount(**self.amount)
+        if not isinstance(self.amount, MoneyAmount):
+            if isinstance(self.amount, float):
+                self.amount = MoneyAmount(amount=self.amount)
+            else:
+                self.amount = MoneyAmount(**self.amount)
+
         # assert len(self.description) in range(5, 101), 'DDDD'
 
 
 @dataclass
 class OrderPreview:
     id: str
-    status: str
+    status: OrderStatus
     number: str
-    amount: MoneyAmount
+    amount: MoneyAmount | dict | float
     createdDateTime: str
     expirationDateTime: str
     payLink: str
@@ -51,10 +56,14 @@ class OrderPreview:
     completedDateTime: str | None = None
 
     def __post_init__(self) -> None:
-        self.amount = MoneyAmount(**self.amount)
+        if not isinstance(self.amount, MoneyAmount):
+            if isinstance(self.amount, float):
+                self.amount = MoneyAmount(amount=self.amount)
+            else:
+                self.amount = MoneyAmount(**self.amount)
     
     def convert_database_appropriate(self) -> tuple:
-        t = self.id, self.status, self.number, str(self.amount), self.createdDateTime, \
+        t = self.id, self.status, self.number, self.amount, self.createdDateTime, \
             self.expirationDateTime, self.payLink, self.directPayLink, self.completedDateTime
         return t
 
@@ -76,9 +85,9 @@ class PaymentOption:
 
 @dataclass
 class OrderReconciliationItem:
-    id: str
-    status: str
-    amount: MoneyAmount
+    id: int
+    status: OrderStatus
+    amount: MoneyAmount | dict | float
     externalId: str
     createdDateTime: str
     expirationDateTime: str
@@ -87,14 +96,18 @@ class OrderReconciliationItem:
     selectedPaymentOption: PaymentOption | None = None
 
     def __post_init__(self) -> None:
-        self.amount = MoneyAmount(**self.amount)
+        if not isinstance(self.amount, MoneyAmount):
+            if isinstance(self.amount, float):
+                self.amount = MoneyAmount(amount=self.amount)
+            else:
+                self.amount = MoneyAmount(**self.amount)
         if self.selectedPaymentOption:
             self.selectedPaymentOption = PaymentOption(**self.selectedPaymentOption)
     
 
 @dataclass
 class OrderList:
-    items: list[OrderReconciliationItem]
+    items: list[OrderReconciliationItem] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         self.items = [OrderReconciliationItem(**item) for item in self.items]
@@ -110,7 +123,7 @@ TResponse = TypeVar('TResponse', OrderPreview, OrderList, OrderAmount)
 
 @dataclass
 class WalletResponse(Generic[TResponse]):
-    status: str
+    status: OperationStatus
     message: str | None = None
     data: TResponse | None = None
     member_class: InitVar[type[TResponse]] = OrderPreview
@@ -121,31 +134,37 @@ class WalletResponse(Generic[TResponse]):
 
 
 @dataclass
-class WebhookPayload:
+class UpdatePayload:
     id: int
     number: str
     externalId: str
-    orderAmount: MoneyAmount
+    orderAmount: MoneyAmount | dict | float
     orderCompletedDateTime: str
-    status: str | None = None
+    status: OrderStatus | None = None
     customData: str | None = None
     selectedPaymentOption: PaymentOption | None = None
 
     def __post_init__(self) -> None:
-        self.orderAmount = MoneyAmount(**self.orderAmount)
+        if not isinstance(self.orderAmount, MoneyAmount):
+            if isinstance(self.orderAmount, float):
+                self.orderAmount = MoneyAmount(amount=self.orderAmount)
+            else:
+                self.orderAmount = MoneyAmount(**self.orderAmount)
         if self.selectedPaymentOption:
             self.selectedPaymentOption = PaymentOption(**self.selectedPaymentOption)
+    
+    
     
 
 @dataclass
 class Update:
     eventDateTime: str 
     eventId: int
-    type: str
-    payload: WebhookPayload
+    type: UpdateType
+    payload: UpdatePayload
 
     def __post_init__(self) -> None:
-        self.payload = WebhookPayload(**self.payload)
+        self.payload = UpdatePayload(**self.payload)
 
     @staticmethod
     def compute_signature(api_key: str, method: str, uri: str,

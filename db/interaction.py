@@ -5,20 +5,31 @@ import aiosqlite
 
 from wallet.entities import MoneyAmount
 
-from .entities import TempOrder, UserData
-from utils import SCRIPT_PATH, DB_PATH
+from .entities import OrderData, UserData
+from utils import SCRIPT_PATH, DB_PATH, unpack
 
 
-def adapt_user_data(udata: UserData) -> str:
-    return repr(udata)
+def adapt_user_data(user_data: UserData) -> str:
+    return str(user_data)
     
 
 def convert_user_data(s: str) -> UserData:
     return UserData(**json.loads(s))
 
 
+def adapt_money_amount(money_amount: MoneyAmount) -> str:
+    return str(money_amount)
+    
+
+def convert_money_amount(s: str) -> MoneyAmount:
+    amount, currency_code = s.split()
+    return MoneyAmount(amount=amount, currencyCode=currency_code)
+
+
 sqlite3.register_adapter(UserData, adapt_user_data)
 sqlite3.register_converter('userdata', convert_user_data)
+sqlite3.register_adapter(MoneyAmount, adapt_money_amount)
+sqlite3.register_converter('moneyamount', convert_money_amount)
 
 
 def create_tables():
@@ -38,12 +49,10 @@ async def get_user_orders(user_id: int) -> Iterable[sqlite3.Row]:
             return await cursor.fetchall()
 
 
-
 async def get_items() -> Iterable[sqlite3.Row]:
     async with aiosqlite.connect(DB_PATH) as conn:
         async with conn.execute('select * from items') as cursor:
             return await cursor.fetchall()
-
 
 
 async def get_item(id: int) -> sqlite3.Row:
@@ -58,11 +67,9 @@ async def get_users_ids() -> list[int]:
             return [row[0] for row in await cursor.fetchall()]
 
 
-
 async def user_exists(user_id: int) -> bool:
     return user_id in await get_users_ids()
         
-
 
 async def add_user(user_id: int, username: str, lang_code: str, ref: Optional[str]) -> None:
     async with aiosqlite.connect(DB_PATH) as conn:
@@ -71,36 +78,13 @@ async def add_user(user_id: int, username: str, lang_code: str, ref: Optional[st
         await conn.commit()
 
 
-async def add_order(
-    id: str,
-    user_id: int, 
-    item_id: int, 
-    external_id: str, 
-    logPassRc: UserData,
-    status: str,
-    number: str,
-    amount: MoneyAmount,
-    createdDateTime: str,
-    expirationDateTime: str,
-    payLink: str,
-    directPayLink: str,
-    completedDateTime: str | None = None
-) -> None:
-    if not await user_exists(user_id):
+async def add_order(order: OrderData) -> None:
+    if not await user_exists(order.user_id):
         raise Exception('user not present in database')
     async with aiosqlite.connect(DB_PATH) as conn:
-        await conn.execute(
-            'insert into orders \
-             values (?, ?, ?, ?, ?)',
-            (user_id, item_id, external_id, user_data, temp_order))
+        await conn.execute('insert into orders values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+                           tuple(order))
         await conn.commit()
-
-
-async def add_order_new(row: tuple) -> None:
-    async with aiosqlite.connect(DB_PATH) as conn:
-        await conn.execute('insert into orders_new values (?, ?, ?, ?, ?, ?, ?, ?, ?)', row)
-        await conn.commit()
-
 
 
 async def update_order_payed(order_id: int, payed_ts: str) -> None:
@@ -118,9 +102,9 @@ async def update_order_completed(order_id: int, completed_ts: str) -> None:
         await conn.commit()
 
 
-async def get_user_id_by_ext_id(external_id: str) -> int:
-    async with aiosqlite.connect(DB_PATH) as conn:
-        async with conn.execute('select user_id from orders where external_id=?', 
-                                (external_id,)) as cursor:
-            return (await cursor.fetchone())[0]
-
+# async def get_user_id_by_ext_id(external_id: str) -> int:
+#     async with aiosqlite.connect(DB_PATH) as conn:
+#         row = 
+#         async with conn.execute('select user_id from orders where external_id=?', 
+#                                 (external_id,)) as cursor:
+#             return (await cursor.fetchone())[0]

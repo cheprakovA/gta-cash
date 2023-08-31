@@ -2,9 +2,9 @@ drop table if exists users;
 create table users(
     id          integer primary key,
     username    varchar,
-    lang_code   varchar,
-    referral_id integer null default null,
-    foreign key( referral_id ) references users( id )
+    langCode    varchar,
+    referalId   integer null default null,
+    foreign key( referalId ) references users( id )
 );
 
 
@@ -22,17 +22,17 @@ create table orders(
     userId             integer not null,
     itemId             integer not null,
     externalId         varchar not null,
-    logPassRc          userdata not null,
-    status             varchar check( status in ('ACTIVE', 'EXPIRED', 'PAID', 'CANCELLED') ) not null,
+    udata              userdata not null,
+    status             varchar not null,
     number             varchar not null,
-    amount             varchar not null
+    amount             moneyamount not null,
     createdDateTime    timestamp not null,
     expirationDateTime timestamp not null,
     payLink            varchar not null,
     directPayLink      varchar not null,
     completedDateTime  timestamp null default null,
-    foreign key( user_id ) references users( id ),
-    foreign key( item_id ) references items( id )
+    foreign key( userId ) references users( id ),
+    foreign key( itemId ) references items( id )
 );
 
 
