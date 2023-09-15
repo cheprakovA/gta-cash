@@ -10,7 +10,9 @@ async def send_payment_request(payment_request: PaymentRequest) -> WalletRespons
         async with session.post(f'{WALLET_API_URL}/order',
                                 headers=HEADERS, 
                                 json=asdict(payment_request)) as resp:
-            return WalletResponse(**(await resp.json()))
+            response = WalletResponse(**(await resp.json()))
+            print(response)
+            return response
 
 
 async def retrieve_order_info(order_id: str) -> WalletResponse:

@@ -9,7 +9,7 @@ import aiohttp
 import db.interaction
 from db.entities import OrderData, UserData
 from states import InputOrderData
-from utils import DATA_DIR, WALLET_KEY, unpack
+from utils import DATA_DIR, WALLET_KEY
 from kb import payment_kb, platforms_kb
 
 from aiogram.filters import Text
@@ -18,11 +18,13 @@ from aiogram.fsm.context import FSMContext
 
 from WalletPay import AsyncWalletPayAPI
 
-from wallet.entities import MoneyAmount, PaymentRequest
+from wallet.entities import MoneyAmount, PaymentRequest, Event
 from wallet.interaction import send_payment_request
+from wallet.webhook_manager import WebhookManager
 # from utils import send_payment_rq
 
 
+wm = WebhookManager(api_key=WALLET_KEY)
 router = Router()
 
 
@@ -72,11 +74,11 @@ async def recovery_codes_as_image(message: Message, bot: Bot, state: FSMContext)
     item = await db.interaction.get_item(item_id)
     external_id = uuid.uuid4()
 
-    request = PaymentRequest(amount=0.02,
+    request = PaymentRequest(amount=0.01,
                              customerTelegramUserId=user_id, 
                              description=item[0],
                              externalId=external_id,
-                             customData='some custom data')
+                             customData=str(user_id))
     
     response = await send_payment_request(request)
 
@@ -89,16 +91,17 @@ async def recovery_codes_as_image(message: Message, bot: Bot, state: FSMContext)
                       number=response.data.number,
                       amount=response.data.amount,
                       createdDateTime=response.data.createdDateTime,
-                      expirationDateTime=response.data.expirationDateTime,
-                      payLink=response.data.payLink,
-                      directPayLink=response.data.directPayLink)
+                      expirationDateTime=response.data.expirationDateTime)
     
     print(order)
     print(tuple(order))
     
-    await db.interaction.add_order(order)
     await message.answer('pls pay:', reply_markup=payment_kb(response.data.directPayLink))
+    await db.interaction.add_order(order)
     await state.clear()
+
+
+
 
 
 @router.message(InputOrderData.get_recovery_codes, F.text)
@@ -110,7 +113,7 @@ async def recovery_codes_as_text(message: Message, state: FSMContext):
     item = await db.interaction.get_item(item_id)
     external_id = uuid.uuid4()
 
-    request = PaymentRequest(amount=0.02, 
+    request = PaymentRequest(amount=0.01, 
                              customerTelegramUserId=user_id,
                              externalId=external_id,
                              description=item[0],
@@ -127,9 +130,7 @@ async def recovery_codes_as_text(message: Message, state: FSMContext):
                       number=response.data.number,
                       amount=response.data.amount,
                       createdDateTime=response.data.createdDateTime,
-                      expirationDateTime=response.data.expirationDateTime,
-                      payLink=response.data.payLink,
-                      directPayLink=response.data.directPayLink)
+                      expirationDateTime=response.data.expirationDateTime)
     
     print(order)
     print(tuple(order))

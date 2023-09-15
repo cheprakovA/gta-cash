@@ -28,8 +28,6 @@ create table orders(
     amount             moneyamount not null,
     createdDateTime    timestamp not null,
     expirationDateTime timestamp not null,
-    payLink            varchar not null,
-    directPayLink      varchar not null,
     completedDateTime  timestamp null default null,
     foreign key( userId ) references users( id ),
     foreign key( itemId ) references items( id )

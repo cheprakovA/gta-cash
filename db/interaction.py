@@ -6,7 +6,7 @@ import aiosqlite
 from wallet.entities import MoneyAmount
 
 from .entities import OrderData, UserData
-from utils import SCRIPT_PATH, DB_PATH, unpack
+from utils import SCRIPT_PATH, DB_PATH
 
 
 def adapt_user_data(user_data: UserData) -> str:
@@ -82,15 +82,15 @@ async def add_order(order: OrderData) -> None:
     if not await user_exists(order.user_id):
         raise Exception('user not present in database')
     async with aiosqlite.connect(DB_PATH) as conn:
-        await conn.execute('insert into orders values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+        await conn.execute('insert into orders values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
                            tuple(order))
         await conn.commit()
 
 
-async def update_order_payed(order_id: int, payed_ts: str) -> None:
+async def update_order_payed(order_id: int, status: str, completed_date_time: str | None) -> None:
     async with aiosqlite.connect(DB_PATH) as conn:
-        await conn.execute("update orders set status='p' where id=?", (order_id,))
-        await conn.execute('update orders set payed_ts=? where id=?', (payed_ts, order_id,))
+        await conn.execute('update orders set status=?, completedDateTime=? where id=?', 
+                           (status, completed_date_time or '', order_id,))
         await conn.commit()
 
 
@@ -102,9 +102,8 @@ async def update_order_completed(order_id: int, completed_ts: str) -> None:
         await conn.commit()
 
 
-# async def get_user_id_by_ext_id(external_id: str) -> int:
-#     async with aiosqlite.connect(DB_PATH) as conn:
-#         row = 
-#         async with conn.execute('select user_id from orders where external_id=?', 
-#                                 (external_id,)) as cursor:
-#             return (await cursor.fetchone())[0]
+async def get_user_id_by_(external_id: str) -> int:
+    async with aiosqlite.connect(DB_PATH) as conn:
+        async with conn.execute('select user_id from orders where external_id=?', 
+                                (external_id,)) as cursor:
+            return (await cursor.fetchone())[0]

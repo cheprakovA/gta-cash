@@ -1,7 +1,5 @@
 from base64 import b64encode
 from dataclasses import InitVar, asdict, dataclass, field
-import hashlib
-import hmac
 from typing import Generic, TypeVar
 import uuid
 
@@ -70,9 +68,9 @@ class OrderPreview:
 
 @dataclass
 class PaymentOption:
-    amount: MoneyAmount
-    amountFee: MoneyAmount
-    amountNet: MoneyAmount
+    amount: MoneyAmount | dict
+    amountFee: MoneyAmount | dict
+    amountNet: MoneyAmount | dict
     exchangeRate: float
 
     def __post_init__(self) -> None:
@@ -134,7 +132,7 @@ class WalletResponse(Generic[TResponse]):
 
 
 @dataclass
-class UpdatePayload:
+class WebhookPayload:
     id: int
     number: str
     externalId: str
@@ -153,23 +151,21 @@ class UpdatePayload:
         if self.selectedPaymentOption:
             self.selectedPaymentOption = PaymentOption(**self.selectedPaymentOption)
     
-    
-    
 
 @dataclass
-class Update:
+class Event:
     eventDateTime: str 
     eventId: int
     type: UpdateType
-    payload: UpdatePayload
+    payload: WebhookPayload
 
     def __post_init__(self) -> None:
-        self.payload = UpdatePayload(**self.payload)
+        self.payload = WebhookPayload(**self.payload)
 
-    @staticmethod
-    def compute_signature(api_key: str, method: str, uri: str,
-                          timestamp: str, body: str) -> str:
-        b64encoded = b64encode(body.encode()).decode()
-        sign = f'{method}.{uri}.{timestamp}.{b64encoded}'
-        _hmac = hmac.new(api_key.encode(), sign.encode(), digestmod=hashlib.sha256)
-        return b64encode(_hmac.digest()).decode()
+    # @staticmethod
+    # def compute_signature(api_key: str, method: str, uri: str,
+    #                       timestamp: str, body: str) -> str:
+    #     b64encoded = b64encode(body.encode()).decode()
+    #     sign = f'{method}.{uri}.{timestamp}.{b64encoded}'
+    #     _hmac = hmac.new(api_key.encode(), sign.encode(), digestmod=hashlib.sha256)
+    #     return b64encode(_hmac.digest()).decode()

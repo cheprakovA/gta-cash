@@ -1,38 +1,21 @@
-import time
-import uuid
-
-from aiogram import F, Bot, Router
+from aiogram import Bot
 import db.interaction
-from db.entities import TempOrder, UserData
-from states import InputOrderData
-from utils import DATA_DIR, WALLET_KEY
-
-from aiogram.types import Message, CallbackQuery
-from aiogram.fsm.context import FSMContext
-
-from WalletPay import WalletPayAPI, WebhookManager, AsyncWalletPayAPI
-from WalletPay.types import Event
 
 
-manager = WebhookManager(client=WalletPayAPI(api_key=WALLET_KEY))
+from wallet.entities import Event
 
 
-@manager.successful_handler
-async def handle_successful_event(event: Event):
-    # user_id = await db.utils.get_user_id_by_ext_id(event.payload.external_id)
-    # await bot.send_message(chat_id=user_id, 
-    #                        text=f'Your payment for order {event.payload.order_id} was successful!')
-    await db.interaction.update_order_payed(event.payload.order_id, 
-                                      event.payload.order_completed_datetime)
+async def successful_event(event: Event, bot: Bot):
+    await bot.send_message(chat_id=event.payload.customData, 
+                           text=f'Your payment for order {event.payload.id} was successful')
+    await db.interaction.update_order_payed(event.payload.id, event.payload.status, 
+                                            event.payload.orderCompletedDateTime)
 
 
-
-@manager.failed_handler
-async def handle_failed_event(event: Event):
-    # user_id = await db.utils.get_user_id_by_ext_id(event.payload.external_id)
-    # await bot.send_message(chat_id=user_id, 
-    #                        text=f'Your payment for order {event.payload.order_id} timed out!')
-    # await db.utils.update_order(event.payload.order_id, event.payload.order_completed_datetime)
-    pass
+async def failed_event(event: Event, bot: Bot):
+    await bot.send_message(chat_id=event.payload.customData, 
+                           text=f'Your payment for order {event.payload.id} failed')
+    await db.interaction.update_order_payed(event.payload.id, event.payload.status, 
+                                            event.payload.orderCompletedDateTime)
 
 

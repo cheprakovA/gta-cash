@@ -37,8 +37,6 @@ class OrderData(UnpackDCMixin):
     amount: MoneyAmount | dict | float
     createdDateTime: str
     expirationDateTime: str
-    payLink: str
-    directPayLink: str
     completedDateTime: str | None = None
 
     def __post_init__(self) -> None:
@@ -54,7 +52,7 @@ class OrderData(UnpackDCMixin):
     # def convert_database_appropriate(self) -> tuple:
     #     res = self.id, self.user_id, self.item_id, self.externalId, self.user_data, \
     #           self.status, self.number, self.amount, self.createdDateTime, \
-    #           self.expirationDateTime, self.payLink, self.directPayLink, self.completedDateTime
+    #           self.expirationDateTime, self.completedDateTime
     #     return res
 
 

@@ -1,81 +1,33 @@
 import asyncio
+from functools import partial
 import logging
 
-from aiogram import Bot, Dispatcher, Router
+from aiogram import Bot, Dispatcher
 from aiogram.enums.parse_mode import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from aiohttp.web import run_app
-from aiohttp.web_app import Application
-# from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
-import db
+
 from handlers.commands_handler import router as commands_router
 from handlers.user_data_handler import router as user_data_router
+from handlers.events_handler import successful_event, failed_event
 
-from utils import BOT_TOKEN, APP_BASE_URL, WALLET_KEY
-from WalletPay import WalletPayAPI, WebhookManager, AsyncWalletPayAPI
-from WalletPay.types import Event
-
-
-
-bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
-
-
-# @manager.successful_handler
-# async def handle_successful_event(event: Event):
-#     user_id = await db.utils.get_user_id_by_ext_id(event.payload.external_id)
-#     await bot.send_message(chat_id=user_id, 
-#                            text=f'Your payment for order {event.payload.order_id} was successful!')
-#     await db.utils.update_order(event.payload.order_id, event.payload.order_completed_datetime)
-
-
-# @manager.failed_handler
-# async def handle_failed_event(event: Event):
-#     user_id = await db.utils.get_user_id_by_ext_id(event.payload.external_id)
-#     await bot.send_message(chat_id=user_id, 
-#                            text=f'Your payment for order {event.payload.order_id} timed out!')
-    # await db.utils.update_order(event.payload.order_id, event.payload.order_completed_datetime)
-
-
-dispatcher = Dispatcher(storage=MemoryStorage())
-dispatcher.include_router(commands_router)
-dispatcher.include_router(user_data_router)
-
-
-# async def on_startup():
-#     await bot.send_message(chat_id=637622249, text="Bot has started!")
-#     # Start the webhook manager in the background
-#     asyncio.create_task(manager.start())
-
-
-# async def on_shutdown():
-#     await bot.send_message(chat_id=637622249, text="Bot is shutting down!")
-
+from utils import BOT_TOKEN, WALLET_KEY
+from wallet.webhook_manager import WebhookManager
 
 
 async def main():
-    
+    bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
+    dp = Dispatcher(storage=MemoryStorage())
+    wm = WebhookManager(api_key=WALLET_KEY)
 
-    # dispatcher['base_url'] = APP_BASE_URL
-    # dispatcher.startup.register(on_startup)
-    # dispatcher.shutdown.register(on_shutdown)
-    
-    
-    
-    
-    # app = Application()
-    # app['bot'] = bot
+    dp.include_router(commands_router)
+    dp.include_router(user_data_router)
 
-    # app.router.add_get('/payment_webhook', demo_handler)
-    
-    # SimpleRequestHandler(dispatcher=dispatcher, 
-    #                      bot=bot).register(app, path='/webhook')
-    # setup_application(app, dispatcher, bot=bot)
-
-    # run_app(app, host='127.0.0.1', port=8081)
+    wm.successful_handler(partial(successful_event, bot=bot))
+    wm.failed_handler(partial(failed_event, bot=bot))
 
     await bot.delete_webhook(drop_pending_updates=True)
-    await dispatcher.start_polling(bot, allowed_updates=dispatcher.resolve_used_update_types())
+    await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
 
 
 if __name__ == '__main__':
