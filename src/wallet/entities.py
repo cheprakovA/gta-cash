@@ -60,10 +60,10 @@ class OrderPreview:
             else:
                 self.amount = MoneyAmount(**self.amount)
     
-    def convert_database_appropriate(self) -> tuple:
-        t = self.id, self.status, self.number, self.amount, self.createdDateTime, \
-            self.expirationDateTime, self.payLink, self.directPayLink, self.completedDateTime
-        return t
+    # def convert_database_appropriate(self) -> tuple:
+    #     t = self.id, self.status, self.number, self.amount, self.createdDateTime, \
+    #         self.expirationDateTime, self.payLink, self.directPayLink, self.completedDateTime
+    #     return t
 
 
 @dataclass

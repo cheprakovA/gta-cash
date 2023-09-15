@@ -4,14 +4,13 @@ from pathlib import Path
 
 WORK_DIR = Path.cwd()
 
-DATA_DIR = WORK_DIR / 'data'
+DATA_DIR = WORK_DIR.parent / 'data'
 DATA_DIR.mkdir(exist_ok=True)
 
-SCRIPT_PATH = WORK_DIR / 'db' / 'init_db.sql'
-DB_PATH = WORK_DIR  / 'db' / 'db.sqlite'
-
-
 DB_NAME = 'db.sqlite'
+SCRIPT_PATH = WORK_DIR / 'db' / 'init_db.sql'
+DB_PATH = WORK_DIR  / 'db' / DB_NAME
+
 
 BOT_TOKEN = '6599454857:AAHJvVwp3pTa7Grn5rPJMYNavfN3wJbHxjs'
 WALLET_KEY = '0YzKF2xlOVXIxotj5EtF86APbFWMxhUtrbQw'
@@ -23,7 +22,7 @@ WALLET_API_URL = 'https://pay.wallet.tg/wpay/store-api/v1'
 BOT_TG_URL = 'https://t.me/MedellinCartelBoostBot'
 WALLET_TG_URL = 'https://t.me/wallet'
 
-HEADERS = {'Wpay-Store-Api-Key': '0YzKF2xlOVXIxotj5EtF86APbFWMxhUtrbQw',
+HEADERS = {'Wpay-Store-Api-Key': WALLET_KEY,
            'Content-Type': 'application/json',
            'Accept': 'application/json'}
 

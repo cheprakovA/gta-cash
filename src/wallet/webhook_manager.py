@@ -13,7 +13,7 @@ class WebhookManager:
     ALLOWED_IPS = {'172.255.248.29', '172.255.248.12', '127.0.0.1'}
 
     def __init__(self, api_key: str, host: str = '0.0.0.0', port: int = 9123,
-                 webhook_endpoint: str = '/wp_webhoo'):
+                 webhook_endpoint: str = '/wp_webhook'):
         self.successful_callbacks = []
         self.failed_callbacks = []
         self.host = host
@@ -27,7 +27,7 @@ class WebhookManager:
         if self.app:
             import uvicorn
 
-            self.register_webhook_endpoint()
+            self.register_webhook_endpoint(self.webhook_endpoint)
             logging.info((f'Webhook is listening at https://{self.host}:'
                           f'{self.port}{self.webhook_endpoint}'))
 
