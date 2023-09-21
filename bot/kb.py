@@ -6,9 +6,9 @@ from aiogram.types import (
     ReplyKeyboardRemove
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from db.enums import Platform
 
-from db.interaction import get_items
+from .db.enums import Platform
+from .db.interaction import get_items
 
 
 def menu_kb() -> InlineKeyboardMarkup:

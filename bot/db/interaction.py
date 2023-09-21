@@ -3,10 +3,10 @@ import sqlite3
 from typing import Iterable, Optional
 import aiosqlite
 
-from wallet.entities import MoneyAmount
+from ..wallet.entities import MoneyAmount
 
 from .entities import OrderData, UserData
-from utils import SCRIPT_PATH, DB_PATH
+from ..utils import SCRIPT_PATH, DB_PATH
 
 
 def adapt_user_data(user_data: UserData) -> str:

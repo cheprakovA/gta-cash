@@ -1,0 +1,11 @@
+version: '3.7'
+
+services:
+  bot:
+    command: sh -c "python3 main.py"
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./src/:/app
+    restart: always

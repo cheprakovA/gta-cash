@@ -3,7 +3,7 @@ from dataclasses import InitVar, asdict, dataclass, field
 from typing import Generic, TypeVar
 import uuid
 
-from utils import BOT_TG_URL, WALLET_TG_URL
+from ..utils import BOT_TG_URL, WALLET_TG_URL
 from .enums import CurrencyCode, OperationStatus, OrderStatus, UpdateType
 
 

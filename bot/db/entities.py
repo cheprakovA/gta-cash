@@ -2,8 +2,8 @@ from dataclasses import dataclass, asdict, fields, is_dataclass
 import json
 import uuid
 
-from wallet.entities import MoneyAmount
-from wallet.enums import OperationStatus
+from ..wallet.entities import MoneyAmount
+from ..wallet.enums import OperationStatus
 from .enums import Platform
 
 
@@ -48,12 +48,3 @@ class OrderData(UnpackDCMixin):
                 self.amount = MoneyAmount(amount=self.amount)
             else:
                 self.amount = MoneyAmount(**self.amount)
-
-    # def convert_database_appropriate(self) -> tuple:
-    #     res = self.id, self.user_id, self.item_id, self.externalId, self.user_data, \
-    #           self.status, self.number, self.amount, self.createdDateTime, \
-    #           self.expirationDateTime, self.completedDateTime
-    #     return res
-
-
-              

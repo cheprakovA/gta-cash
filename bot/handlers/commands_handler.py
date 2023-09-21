@@ -5,9 +5,9 @@ from aiogram.filters.command import CommandObject
 from aiogram.enums.parse_mode import ParseMode
 from aiogram.utils.deep_linking import create_start_link, decode_payload
 
-import db.interaction
-import kb
-import text
+from ..db.interaction import user_exists, add_user
+from ..kb import menu_kb, catalog_kb, platforms_kb
+from ..text import *
 
 
 router = Router()
@@ -17,41 +17,39 @@ router = Router()
 async def cmd_start(message: Message, command: CommandObject):
     referral = decode_payload(command.args or '') or None
     user = message.from_user
-    if not await db.interaction.user_exists(user.id):
-        await db.interaction.add_user(user.id, user.username, 
-                                      user.language_code, referral)
-    answ = text.SALUTATION_MESSAGE.format(name=user.first_name) + \
-        '\n' + text.HELP_MESSAGE
-    await message.answer(answ, reply_markup=kb.menu_kb())
+    if not await user_exists(user.id):
+        await add_user(user.id, user.username, user.language_code, referral)
+    answ = SALUTATION_MESSAGE.format(name=user.first_name) + '\n' + HELP_MESSAGE
+    await message.answer(answ, reply_markup=menu_kb())
 
 
 
 @router.callback_query(Text('main_menu'))
 async def main_menu_handler(callback: CallbackQuery):
     await callback.message.answer(
-        text.SALUTATION_MESSAGE.format(name=callback.from_user.first_name), 
-        reply_markup=kb.menu_kb()
+        SALUTATION_MESSAGE.format(name=callback.from_user.first_name), 
+        reply_markup=menu_kb()
     )
 
 
 
 # @router.message(Command('catalog'))
 # async def cmd_catalog(message: Message):
-#     catalog = await kb.catalog_kb()
+#     catalog = await catalog_kb()
 #     await message.answer('Catalog:', reply_markup=catalog)
 
 
 
 @router.callback_query(Text('get_catalog'))
 async def catalog_handler(callback: CallbackQuery):
-    catalog = await kb.catalog_kb()
+    catalog = await catalog_kb()
     await callback.message.answer('Catalog:', reply_markup=catalog)
 
 
 
 @router.callback_query(Text('get_platforms'))
 async def platforms_handler(callback: CallbackQuery):
-    await callback.message.answer('Choose your platform:', reply_markup=kb.platforms_kb())
+    await callback.message.answer('Choose your platform:', reply_markup=platforms_kb())
 
 
 @router.callback_query(Text('get_referral_link'))

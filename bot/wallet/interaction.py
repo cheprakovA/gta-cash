@@ -1,7 +1,7 @@
 from dataclasses import asdict
 import aiohttp
 import ujson
-from utils import HEADERS, WALLET_API_URL
+from ..utils import HEADERS, WALLET_API_URL
 from .entities import OrderAmount, OrderList, PaymentRequest, WalletResponse
 
 

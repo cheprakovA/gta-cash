@@ -2,7 +2,7 @@ import time
 from pathlib import Path
 
 
-WORK_DIR = Path.cwd()
+WORK_DIR = Path.cwd() / 'bot'
 
 DATA_DIR = WORK_DIR.parent / 'data'
 DATA_DIR.mkdir(exist_ok=True)
@@ -10,7 +10,6 @@ DATA_DIR.mkdir(exist_ok=True)
 DB_NAME = 'db.sqlite'
 SCRIPT_PATH = WORK_DIR / 'db' / 'init_db.sql'
 DB_PATH = WORK_DIR  / 'db' / DB_NAME
-
 
 BOT_TOKEN = '6599454857:AAHJvVwp3pTa7Grn5rPJMYNavfN3wJbHxjs'
 WALLET_KEY = '0YzKF2xlOVXIxotj5EtF86APbFWMxhUtrbQw'

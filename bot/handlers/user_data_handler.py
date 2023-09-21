@@ -1,27 +1,19 @@
-from dataclasses import asdict
-import time
-from typing import Literal
 import uuid
-import ujson
 
 from aiogram import F, Bot, Router
-import aiohttp
-import db.interaction
-from db.entities import OrderData, UserData
-from states import InputOrderData
-from utils import DATA_DIR, WALLET_KEY
-from kb import payment_kb, platforms_kb
-
 from aiogram.filters import Text
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 
-from WalletPay import AsyncWalletPayAPI
+from ..db.interaction import add_order, get_item
 
-from wallet.entities import MoneyAmount, PaymentRequest, Event
-from wallet.interaction import send_payment_request
-from wallet.webhook_manager import WebhookManager
-# from utils import send_payment_rq
+from ..db.entities import OrderData
+from ..states import InputOrderData
+from ..utils import DATA_DIR, WALLET_KEY
+from ..kb import payment_kb, platforms_kb
+from ..wallet.entities import OrderPreview, PaymentRequest, WalletResponse
+from ..wallet.interaction import send_payment_request
+from ..wallet.webhook_manager import WebhookManager
 
 
 wm = WebhookManager(api_key=WALLET_KEY)
@@ -71,7 +63,7 @@ async def recovery_codes_as_image(message: Message, bot: Bot, state: FSMContext)
     
     data = await state.get_data()
     item_id = data.pop('item')
-    item = await db.interaction.get_item(item_id)
+    item = await get_item(item_id)
     external_id = uuid.uuid4()
 
     request = PaymentRequest(amount=0.01,
@@ -97,7 +89,7 @@ async def recovery_codes_as_image(message: Message, bot: Bot, state: FSMContext)
     print(tuple(order))
     
     await message.answer('pls pay:', reply_markup=payment_kb(response.data.directPayLink))
-    await db.interaction.add_order(order)
+    await add_order(order)
     await state.clear()
 
 
@@ -110,7 +102,7 @@ async def recovery_codes_as_text(message: Message, state: FSMContext):
     user_id = message.from_user.id
     data = await state.get_data()
     item_id = data.pop('item')
-    item = await db.interaction.get_item(item_id)
+    item = await get_item(item_id)
     external_id = uuid.uuid4()
 
     request = PaymentRequest(amount=0.01, 
@@ -119,7 +111,7 @@ async def recovery_codes_as_text(message: Message, state: FSMContext):
                              description=item[0],
                              customData='some custom data')
     
-    response = await send_payment_request(request)
+    response: WalletResponse[OrderPreview] = await send_payment_request(request)
 
     order = OrderData(id=response.data.id,
                       user_id=user_id,
@@ -135,7 +127,7 @@ async def recovery_codes_as_text(message: Message, state: FSMContext):
     print(order)
     print(tuple(order))
     
-    await db.interaction.add_order(order)
+    await add_order(order)
 
     await state.set_state(InputOrderData.process_payment)
 
