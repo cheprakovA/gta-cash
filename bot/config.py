@@ -18,12 +18,7 @@ class Redis(BaseSettings):
 
 class Bot(BaseSettings):
     token: str
-    admin_ids: list[int]
     use_redis: bool
-
-    @validator('admin_ids', pre=True, always=True)
-    def admin_ids_list(cls, v) -> list[int]:
-        return json.loads(v)
 
 
 class Settings(BaseSettings):
@@ -32,11 +27,11 @@ class Settings(BaseSettings):
     redis: Redis
 
     class Config:
-        env_file = '.env'
+        env_file = '.env.dev'
         env_file_encoding = 'utf-8'
         env_nested_delimiter = '__'
 
 
-def load_config(env_file='.env') -> Settings:
+def load_config(env_file='.env.dev') -> Settings:
     settings = Settings(_env_file=env_file)
     return settings

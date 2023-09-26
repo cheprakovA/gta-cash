@@ -3,6 +3,15 @@ from functools import partial
 import logging
 import sys
 
+from aiohttp import web
+
+from aiogram import Bot, Dispatcher, Router, types
+from aiogram.enums import ParseMode
+from aiogram.filters import CommandStart
+from aiogram.types import FSInputFile, Message
+from aiogram.utils.markdown import hbold
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+
 from aiogram import Bot, Dispatcher
 from aiogram.enums.parse_mode import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -15,8 +24,14 @@ from .handlers.user_data_handler import router as user_data_router
 from .handlers.events_handler import successful_event, failed_event
 from .db.interaction import create_tables
 
-from .utils import BOT_TOKEN, WALLET_KEY
-from .wallet.webhook_manager import WebhookManager
+from .utils import (
+    BASE_WEBHOOK_URL, 
+    BOT_TOKEN, 
+    WEBHOOK_PATH, 
+    WEBHOOK_SECRET,
+    WEB_SERVER_HOST, 
+    WEB_SERVER_PORT
+)
 
 
 logging.basicConfig(
@@ -27,41 +42,53 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+async def on_startup(bot: Bot) -> None:
+    await bot.set_webhook(
+        f"{BASE_WEBHOOK_URL}{WEBHOOK_PATH}",
+        secret_token=WEBHOOK_SECRET,
+    )
+
+
+
 async def main():    
     # create_tables()
     config = load_config()
     
-    if config.tg_bot.use_redis:
-        storage = RedisStorage.from_url(
-            url=f"redis://{config.redis.host}",
-            connection_kwargs={
-                "db": config.redis.db,
-            },
-            key_builder=DefaultKeyBuilder(with_destiny=True),
-        )
-    else:
-        storage = MemoryStorage()
+    # if config.tg_bot.use_redis:
+    #     storage = RedisStorage.from_url(
+    #         url=f"redis://{config.redis.host}",
+    #         connection_kwargs={
+    #             "db": config.redis.db,
+    #         },
+    #         key_builder=DefaultKeyBuilder(with_destiny=True),
+    #     )
+    # else:
+    #     storage = MemoryStorage()
     
     bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
     dp = Dispatcher(storage=MemoryStorage())
     
-    # wm = WebhookManager(api_key=WALLET_KEY)
-
     dp.include_router(commands_router)
     dp.include_router(user_data_router)
-
-    # wm.successful_handler(partial(successful_event, bot=bot))
-    # wm.failed_handler(partial(failed_event, bot=bot))
-
+    
+    app = web.Application()
+    
+    webhook_requests_handler = SimpleRequestHandler(
+        dispatcher=dp,
+        bot=bot,
+        secret_token=WEBHOOK_SECRET,
+    )
+    
     logger.info('starting bot')
-    # asyncio.create_task(wm.start())
 
     try:
-        await bot.get_updates(offset=-1)
-        await dp.start_polling(bot, config=config)
+        webhook_requests_handler.register(app, path=WEBHOOK_PATH)
+        setup_application(app, dp, bot=bot)
+        web.run_app(app, host=WEB_SERVER_HOST, port=WEB_SERVER_PORT)
     finally:
-        await dp.fsm.storage.close()
-        await bot.session.close()
+        # await dp.fsm.storage.close()
+        # await bot.session.close()
+        pass
         
 
 
